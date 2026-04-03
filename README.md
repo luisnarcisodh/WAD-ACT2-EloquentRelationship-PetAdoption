@@ -1,5 +1,6 @@
 # PET ADOPTION & CARE SYSTEM
 
+<img width="1066" height="531" alt="Screenshot 2026-04-04 012758" src="https://github.com/user-attachments/assets/2ba4435d-ca82-45ee-897e-1ea8926c9ba4" />
 
 
 ERD
