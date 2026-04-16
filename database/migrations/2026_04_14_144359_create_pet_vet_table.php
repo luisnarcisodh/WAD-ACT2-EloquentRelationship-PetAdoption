@@ -6,21 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('pet_vet', function (Blueprint $table) {
-            $table->id();
             $table->foreignId('pet_id')->constrained()->onDelete('cascade');
             $table->foreignId('vet_id')->constrained()->onDelete('cascade');
+
+            // important: composite primary key
+            $table->primary(['pet_id', 'vet_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pet_vet');
