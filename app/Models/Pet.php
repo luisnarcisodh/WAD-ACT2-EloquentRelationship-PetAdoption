@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Pet extends Model
 {
@@ -17,9 +18,24 @@ class Pet extends Model
         'gender',
         'status',
         'description',
-        'image',
+        'image_path' // Updated from 'image'
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute(): string
+    {
+        return $this->image_path
+            ? Storage::disk('public')->url($this->image_path)
+            : asset('images/default-pet.jpg');
+    }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('status', 'available');
+    }
+
+    // REQUIRED RELATIONSHIPS
     public function vaccination()
     {
         return $this->hasOne(Vaccination::class);

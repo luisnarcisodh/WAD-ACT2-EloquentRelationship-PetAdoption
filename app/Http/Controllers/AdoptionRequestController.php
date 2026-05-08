@@ -3,70 +3,84 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdoptionRequest;
+use App\Models\Pet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AdoptionRequestController extends Controller
 {
+    use AuthorizesRequests;
+
+    // READ
     public function index()
     {
-        // Changed ->get() to ->paginate(10) so the view's pagination links will work
-        if (Auth::user()->isAdmin()) {
-            $adoptions = AdoptionRequest::with(['user', 'pet'])->latest()->paginate(10);
-        } else {
-            $adoptions = Auth::user()->adoptionRequests()->with('pet')->latest()->paginate(10);
+        $query = AdoptionRequest::with(['user', 'pet']);
+
+        if (!Auth::user()->isAdmin()) {
+            $query->where('user_id', Auth::id());
         }
 
+        $adoptions = $query->latest()->paginate(10);
         return view('adoptions.index', compact('adoptions'));
     }
 
-    public function create()
-    {
-        // Redirect back to the pets catalog since adoptions are handled via modals/buttons there
-        return redirect()->route('pets.index')->with('success', 'Please select a pet from the catalog to adopt.');
-    }
-
+    // CREATE
     public function store(Request $request)
     {
-        $request->validate(['pet_id' => 'required|exists:pets,id']);
+        $request->validate([
+            'pet_id' => 'required|exists:pets,id',
+            'notes'  => 'nullable|string|max:500'
+        ]);
 
-        // Prevent user from requesting the same pet if they already have a pending request
         $exists = AdoptionRequest::where('user_id', Auth::id())
             ->where('pet_id', $request->pet_id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'approved'])
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['error' => 'You already have a pending request for this pet.']);
+            return back()->with('error', 'You already have an active request for this pet.');
         }
 
         AdoptionRequest::create([
             'user_id' => Auth::id(),
-            'pet_id' => $request->pet_id,
-            'status' => 'pending',
+            'pet_id'  => $request->pet_id,
+            'notes'   => $request->notes,
+            'status'  => 'pending',
         ]);
 
-        return back()->with('success', 'Your adoption request has been submitted.');
+        return back()->with('success', 'Your adoption request has been submitted successfully.');
     }
 
+    // UPDATE
     public function update(Request $request, AdoptionRequest $adoption)
     {
+        $this->authorize('update', $adoption); // Policy Check (Admin Only)
+
         $validated = $request->validate([
             'status' => 'required|in:pending,approved,rejected',
         ]);
 
-        $adoption->update($validated);
-        return back()->with('success', 'Adoption status has been updated.');
-    }
+        $adoption->update([
+            'status' => $validated['status'],
+            'reviewed_at' => now()
+        ]);
 
-    public function destroy(AdoptionRequest $adoption)
-    {
-        // Allow admins or the owner of the request to delete it
-        if (Auth::user()->isAdmin() || Auth::id() === $adoption->user_id) {
-            $adoption->delete();
-            return back()->with('success', 'Adoption request removed successfully.');
+        if ($validated['status'] === 'approved') {
+            $adoption->pet->update(['status' => 'adopted']);
+        } elseif ($validated['status'] === 'rejected' && $adoption->getOriginal('status') === 'approved') {
+            $adoption->pet->update(['status' => 'available']);
         }
 
-        abort(403, 'Unauthorized action.');
+        return back()->with('success', 'Adoption status updated successfully.');
+    }
+
+    // DELETE
+    public function destroy(AdoptionRequest $adoption)
+    {
+        $this->authorize('delete', $adoption); // Policy Check (Owner or Admin Only)
+
+        $adoption->delete();
+        return back()->with('success', 'Adoption request removed.');
     }
 }
