@@ -26,10 +26,10 @@ ERD
 * **Language:** PHP 8.3
 * **Database:** SQLite
 
-# PawHQ 🐾 - Pet Adoption System
+# PawsHQ 🐾 - Pet Adoption System
 
 ## 📖 Description of the System
-**PawHQ** is a role-based web application built with Laravel that connects shelter pets with potential adopters. The system features two main roles: 
+**PawsHQ** is a role-based web application built with Laravel that connects shelter pets with potential adopters. The system features two main roles: 
 1. **Users (Adopters)** who can browse available pets and submit adoption requests.
 2. **Administrators** who manage the pet catalog and review, approve, or reject adoption applications. 
 
