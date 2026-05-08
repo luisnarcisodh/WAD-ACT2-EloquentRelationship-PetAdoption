@@ -37,7 +37,7 @@ The project demonstrates a secure, restricted environment where users are strict
 
 ---
 
-## ✨ List of Implemented Features
+## List of Implemented Features
 
 This system fully implements the required Laravel backend concepts:
 
