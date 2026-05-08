@@ -26,7 +26,7 @@ ERD
 * **Language:** PHP 8.3
 * **Database:** SQLite
 
-# Pawsitive 🐾 - Pet Adoption System
+# PawHQ 🐾 - Pet Adoption System
 
 ## 📖 Description of the System
 **Pawsitive** is a role-based web application built with Laravel that connects shelter pets with potential adopters. The system features two main roles: 
